@@ -36,7 +36,7 @@ export default function Header({ searchQuery = "", onSearchChange }: HeaderProps
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80">
+              <SheetContent side="left" className="w-80 bg-white">
                 <SheetHeader>
                   <SheetTitle className="text-left">
                     <div className="text-2xl font-bold text-blue-500">MORENT</div>
