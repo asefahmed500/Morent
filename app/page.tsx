@@ -1,11 +1,19 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Heart, ArrowUpDown, Fuel, Users, Zap } from "lucide-react"
+import { Heart, ArrowUpDown, Fuel, Users, Zap, Search } from "lucide-react"
 import Header from "@/components/header"
+import CarCard from "@/components/car-card"
 import Link from "next/link"
 import { allCars } from "@/lib/car-data"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
+  
   const popularCars = allCars.slice(0, 4)
   const recommendationCars = allCars.slice(4, 12)
   const mobileCars = [
@@ -15,12 +23,19 @@ export default function HomePage() {
     allCars.find((car) => car.id === 7), // All New Terios
     allCars.find((car) => car.id === 10), // New MG ZS
     allCars.find((car) => car.id === 9), // MG ZX Exclusive
-  ].filter(Boolean)
+  ].filter((car): car is NonNullable<typeof car> => car !== undefined) // Filter out undefined values
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/cars?search=${encodeURIComponent(searchQuery)}`)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <Header />
+      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-4 md:py-8">
@@ -72,6 +87,28 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Search Bar Section */}
+        <div className="mb-6">
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search for cars, brands, or models..."
+                className="w-full pl-12 pr-32 py-4 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button 
+                type="submit" 
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white px-6"
+              >
+                Search
+              </Button>
+            </div>
+          </form>
         </div>
 
         {/* Pick-up and Drop-off Section */}
@@ -163,52 +200,19 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {popularCars.map((car) => (
-              <Card key={car.id} className="bg-white shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">{car.name}</h3>
-                      <p className="text-sm text-gray-500">{car.type}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" className={car.liked ? "text-red-500" : "text-gray-300"}>
-                      <Heart className={`h-5 w-5 ${car.liked ? "fill-current" : ""}`} />
-                    </Button>
-                  </div>
-                  <div className="mb-4 flex items-center justify-center h-20">
-                    <img
-                      src={car.image || "/placeholder.svg"}
-                      alt={car.name}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <Fuel className="h-4 w-4" />
-                      <span>{car.fuel}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Zap className="h-4 w-4" />
-                      <span>{car.transmission}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4" />
-                      <span>{car.capacity}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xl font-bold text-gray-900">${car.price}.00/</span>
-                      <span className="text-sm text-gray-500">day</span>
-                      {car.originalPrice && (
-                        <div className="text-sm text-gray-400 line-through">${car.originalPrice}.00</div>
-                      )}
-                    </div>
-                    <Link href={`/cars/${car.id}`}>
-                      <Button className="bg-blue-500 hover:bg-blue-600 text-sm px-4 py-2">Rent Now</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+              <CarCard
+                key={car.id}
+                id={car.id}
+                name={car.name}
+                type={car.type}
+                image={car.image}
+                fuel={car.fuel}
+                transmission={car.transmission}
+                capacity={car.capacity}
+                price={car.price}
+                originalPrice={car.originalPrice}
+                liked={car.liked}
+              />
             ))}
           </div>
         </div>
@@ -216,52 +220,19 @@ export default function HomePage() {
         {/* Mobile Car List */}
         <div className="block sm:hidden space-y-4 mb-8">
           {mobileCars.map((car) => (
-            <Card key={car.id} className="bg-white shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">{car.name}</h3>
-                    <p className="text-sm text-gray-500">{car.type}</p>
-                  </div>
-                  <Button variant="ghost" size="icon" className={car.liked ? "text-red-500" : "text-gray-300"}>
-                    <Heart className={`h-5 w-5 ${car.liked ? "fill-current" : ""}`} />
-                  </Button>
-                </div>
-                <div className="mb-4 flex items-center justify-center h-16">
-                  <img
-                    src={car.image || "/placeholder.svg"}
-                    alt={car.name}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <div className="flex items-center space-x-1">
-                    <Fuel className="h-4 w-4" />
-                    <span>{car.fuel}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Zap className="h-4 w-4" />
-                    <span>{car.transmission}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Users className="h-4 w-4" />
-                    <span>{car.capacity}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-lg font-bold text-gray-900">${car.price}.00/</span>
-                    <span className="text-sm text-gray-500">day</span>
-                    {car.originalPrice && (
-                      <div className="text-sm text-gray-400 line-through">${car.originalPrice}.00</div>
-                    )}
-                  </div>
-                  <Link href={`/cars/${car.id}`}>
-                    <Button className="bg-blue-500 hover:bg-blue-600 text-sm px-4 py-2">Rent Now</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+            <CarCard
+              key={car.id}
+              id={car.id}
+              name={car.name}
+              type={car.type}
+              image={car.image}
+              fuel={car.fuel}
+              transmission={car.transmission}
+              capacity={car.capacity}
+              price={car.price}
+              originalPrice={car.originalPrice}
+              liked={car.liked}
+            />
           ))}
         </div>
 
@@ -273,52 +244,19 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {recommendationCars.map((car) => (
-              <Card key={car.id} className="bg-white shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">{car.name}</h3>
-                      <p className="text-sm text-gray-500">{car.type}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" className={car.liked ? "text-red-500" : "text-gray-300"}>
-                      <Heart className={`h-5 w-5 ${car.liked ? "fill-current" : ""}`} />
-                    </Button>
-                  </div>
-                  <div className="mb-4 flex items-center justify-center h-20">
-                    <img
-                      src={car.image || "/placeholder.svg"}
-                      alt={car.name}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <Fuel className="h-4 w-4" />
-                      <span>{car.fuel}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Zap className="h-4 w-4" />
-                      <span>{car.transmission}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4" />
-                      <span>{car.capacity}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xl font-bold text-gray-900">${car.price}.00/</span>
-                      <span className="text-sm text-gray-500">day</span>
-                      {car.originalPrice && (
-                        <div className="text-sm text-gray-400 line-through">${car.originalPrice}.00</div>
-                      )}
-                    </div>
-                    <Link href={`/cars/${car.id}`}>
-                      <Button className="bg-blue-500 hover:bg-blue-600 text-sm px-4 py-2">Rent Now</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+              <CarCard
+                key={car.id}
+                id={car.id}
+                name={car.name}
+                type={car.type}
+                image={car.image}
+                fuel={car.fuel}
+                transmission={car.transmission}
+                capacity={car.capacity}
+                price={car.price}
+                originalPrice={car.originalPrice}
+                liked={car.liked}
+              />
             ))}
           </div>
         </div>

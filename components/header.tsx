@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   searchQuery?: string
@@ -15,6 +16,8 @@ interface HeaderProps {
 
 export default function Header({ searchQuery = "", onSearchChange }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
+  const router = useRouter()
 
   const navigationItems = [
     { name: "Home", href: "/" },
@@ -22,6 +25,27 @@ export default function Header({ searchQuery = "", onSearchChange }: HeaderProps
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
   ]
+
+  // Update local state when prop changes
+  useEffect(() => {
+    if (searchQuery !== localSearchQuery) {
+      setLocalSearchQuery(searchQuery)
+    }
+  }, [searchQuery])
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Navigate to cars page with search query
+    router.push(`/cars?search=${encodeURIComponent(localSearchQuery)}`)
+  }
+
+  const handleInputChange = (value: string) => {
+    setLocalSearchQuery(value)
+    // If onSearchChange is provided, call it (for pages that want to handle search in real-time)
+    if (onSearchChange) {
+      onSearchChange(value)
+    }
+  }
 
   return (
     // Changed bg-card to bg-white to make the navbar background white instead of transparent
@@ -115,18 +139,18 @@ export default function Header({ searchQuery = "", onSearchChange }: HeaderProps
 
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
-            <div className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search something here"
                 className="pl-10 pr-12 py-2 w-full border-border"
-                value={searchQuery}
-                onChange={(e) => onSearchChange?.(e.target.value)}
+                value={localSearchQuery}
+                onChange={(e) => handleInputChange(e.target.value)}
               />
-              <Button size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2">
+              <Button type="submit" size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2">
                 <Filter className="h-4 w-4" />
               </Button>
-            </div>
+            </form>
           </div>
 
           {/* User Actions */}
@@ -149,18 +173,18 @@ export default function Header({ searchQuery = "", onSearchChange }: HeaderProps
 
         {/* Mobile Search */}
         <div className="md:hidden mt-4">
-          <div className="relative">
+          <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search something here"
               className="pl-10 pr-12 py-2 w-full"
-              value={searchQuery}
-              onChange={(e) => onSearchChange?.(e.target.value)}
+              value={localSearchQuery}
+              onChange={(e) => handleInputChange(e.target.value)}
             />
-            <Button size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2">
+            <Button type="submit" size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2">
               <Filter className="h-4 w-4" />
             </Button>
-          </div>
+          </form>
         </div>
       </div>
     </header>

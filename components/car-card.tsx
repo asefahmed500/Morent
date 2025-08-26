@@ -7,7 +7,7 @@ import Link from "next/link"
 import { useState } from "react"
 
 interface CarCardProps {
-  id: string
+  id: number | string // Accept both number and string for flexibility
   name: string
   type: string
   image: string
@@ -36,6 +36,9 @@ export default function CarCard({
   const handleDoubleClick = () => {
     setIsLiked(!isLiked)
   }
+
+  // Convert ID to string for URL
+  const stringId = typeof id === 'number' ? id.toString() : id
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow bg-white">
@@ -77,7 +80,7 @@ export default function CarCard({
             </div>
             {originalPrice && <div className="text-sm text-gray-400 line-through">${originalPrice}.00</div>}
           </div>
-          <Link href={`/cars/${id}`}>
+          <Link href={`/cars/${stringId}`}>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4">Rent Now</Button>
           </Link>
         </div>

@@ -1,23 +1,34 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import Header from "@/components/header"
 import FilterSidebar from "@/components/filter-sidebar"
 import PickupDropoffForms from "@/components/pickup-dropoff-forms"
 import CarCard from "@/components/car-card"
 import { allCars } from "@/lib/car-data"
+import { useSearchParams } from "next/navigation"
 
 export default function CarsPage() {
-  const [searchQuery, setSearchQuery] = useState("")
+  const searchParams = useSearchParams()
+  const urlSearchQuery = searchParams.get('search') || ""
+  
+  const [searchQuery, setSearchQuery] = useState(urlSearchQuery)
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [selectedCapacities, setSelectedCapacities] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState([200])
   const [showMobileFilters, setShowMobileFilters] = useState(false)
 
+  // Update search query when URL parameter changes
+  useEffect(() => {
+    if (urlSearchQuery !== searchQuery) {
+      setSearchQuery(urlSearchQuery)
+    }
+  }, [urlSearchQuery])
+
   const filteredCars = useMemo(() => {
     return allCars.filter((car) => {
-      const matchesSearch =
+      const matchesSearch = !searchQuery || 
         car.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         car.type.toLowerCase().includes(searchQuery.toLowerCase())
 
@@ -72,7 +83,7 @@ export default function CarsPage() {
               {filteredCars.map((car) => (
                 <CarCard
                   key={car.id}
-                  id={car.id}
+                  id={car.id.toString()} // Convert numeric ID to string
                   name={car.name}
                   type={car.type}
                   image={car.image}
